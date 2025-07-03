@@ -1,6 +1,5 @@
 import os
 import sys
-import pandas as pd
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 from PyPDF2 import PdfMerger
@@ -19,26 +18,31 @@ COMBINED_FILENAME = "Combined_Envelopes.pdf"
 ENVELOPE_SIZE = (241, 105)  # #10 envelope in mm (landscape)
 
 # ----- MAIN FUNCTION -----
-def generate_envelopes(csv_file):
-    if not os.path.isfile(csv_file):
-        print(f"❌ Error: File '{csv_file}' not found.")
-        return
+def generate_envelopes(csv_files):
+    import csv
+    all_rows = []
+    for csv_file in csv_files:
+        if not os.path.isfile(csv_file):
+            print(f"❌ Error: File '{csv_file}' not found.")
+            continue
+        with open(csv_file, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                all_rows.append(row)
 
-    if not os.path.exists(LOGO_FILENAME):
-        raise FileNotFoundError(f"❌ Logo file '{LOGO_FILENAME}' is required but not found.")
-
-    df = pd.read_csv(csv_file).fillna("")
-    if "Account Name" in df.columns:
-        df.sort_values("Account Name", inplace=True)
-    elif "First Name" in df.columns:
-        df.sort_values("First Name", inplace=True)
-    else:
-        print("⚠️  Warning: Neither 'Account Name' nor 'First Name' columns found. Skipping sort.")
+    # Sorting logic
+    if all_rows:
+        if "Account Name" in all_rows[0]:
+            all_rows.sort(key=lambda r: str(r.get("Account Name", "")).strip().lower())
+        elif "First Name" in all_rows[0] and "Last Name" in all_rows[0]:
+            all_rows.sort(key=lambda r: (str(r.get("First Name", "")).strip().lower(), str(r.get("Last Name", "")).strip().lower()))
+        else:
+            print("⚠️  Warning: No suitable columns for sorting. Skipping sort.")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     individual_paths = []
 
-    for _, row in df.iterrows():
+    for row in all_rows:
         first = str(row.get("First Name", "")).strip()
         last = str(row.get("Last Name", "")).strip()
         account = str(row.get("Account Name", "")).strip()
@@ -56,8 +60,12 @@ def generate_envelopes(csv_file):
         street = get_field(row, "Address (Street)", "Street Address")
         city = get_field(row, "Address (City)", "City")
         state = get_field(row, "Address (State/Province)", "State")
-        zip_code = get_field(row, "Address (Postal/Zip Code)", "Zip Code", "Address (Postal Code)")
+        zip_code = get_field(row, "Address (Postal Code)", "Zip Code")
         city_state_zip = f"{city}, {state} {zip_code}"
+
+        # Skip if address is blank
+        if not street:
+            continue
 
         pdf = FPDF(unit="mm", format=ENVELOPE_SIZE)
         pdf.add_page()
@@ -100,7 +108,7 @@ def generate_envelopes(csv_file):
 # ----- ENTRY POINT -----
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python generate_envelopes.py <members.csv>")
+        print("Usage: python generate_envelopes.py <members1.csv> [members2.csv ...]")
     else:
-        generate_envelopes(sys.argv[1])
+        generate_envelopes(sys.argv[1:])
 
