@@ -56,7 +56,7 @@ def generate_envelopes(csv_file):
         street = get_field(row, "Address (Street)", "Street Address")
         city = get_field(row, "Address (City)", "City")
         state = get_field(row, "Address (State/Province)", "State")
-        zip_code = get_field(row, "Address (Postal/Zip Code)", "Zip Code")
+        zip_code = get_field(row, "Address (Postal/Zip Code)", "Zip Code", "Address (Postal Code)")
         city_state_zip = f"{city}, {state} {zip_code}"
 
         pdf = FPDF(unit="mm", format=ENVELOPE_SIZE)
