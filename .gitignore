@@ -1,0 +1,9 @@
+# Ignore these files everywhere
+*.csv
+*.pdf
+
+# Ignore specific directories
+archive/
+letters/
+pdfs/
+envelopes/
