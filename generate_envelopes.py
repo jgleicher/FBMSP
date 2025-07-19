@@ -14,7 +14,7 @@ RETURN_ADDRESS = [
     "Mount Horeb, WI 53572"
 ]
 LOGO_FILENAME = "BLUEMOUNDS-F-01.png"
-OUTPUT_DIR = "Envelopes"
+OUTPUT_DIR = "envelopes"
 COMBINED_FILENAME = "Combined_Envelopes.pdf"
 ENVELOPE_SIZE = (241, 105)  # #10 envelope in mm (landscape)
 
