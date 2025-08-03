@@ -113,6 +113,7 @@ def main(csv_files, template_file=TEMPLATE_FILE):
     os.makedirs(OUTPUT_PDF_DIR, exist_ok=True)
 
     today_str = datetime.today().strftime("%B %d, %Y")
+    today_note_date = datetime.today().strftime("%m/%d/%y")
     all_rows = []
     for csv_file in csv_files:
         with open(csv_file, newline='', encoding='utf-8') as f:
@@ -136,6 +137,24 @@ def main(csv_files, template_file=TEMPLATE_FILE):
         merger.write(COMBINED_PDF)
         merger.close()
         print(f"Combined PDF created at: {COMBINED_PDF}")
+
+    # Generate membership_letter_sent.csv
+    out_csv = "membership_letter_sent.csv"
+    with open(out_csv, "w", newline='', encoding='utf-8') as f:
+        writer = csv.writer(f, delimiter=',')
+        writer.writerow([
+            "Account ID", "Update Only", "Note Date", "Note Note", "Note Tags"
+        ])
+        for row in all_rows:
+            account_id = row.get("account id", "")
+            writer.writerow([
+                account_id,
+                "Y",
+                today_note_date,
+                "Membership Letter Sent",
+                "Membership Letter Sent"
+            ])
+    print(f"Membership letter log written to: {out_csv}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
