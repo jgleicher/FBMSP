@@ -19,15 +19,23 @@ COMBINED_FILENAME = "Combined_Envelopes.pdf"
 ENVELOPE_SIZE = (241, 105)  # #10 envelope in mm (landscape)
 
 # ----- MAIN FUNCTION -----
-def generate_envelopes(csv_file):
-    if not os.path.isfile(csv_file):
-        print(f"❌ Error: File '{csv_file}' not found.")
+def generate_envelopes(csv_files):
+    # Accepts a list of CSV file paths
+    all_rows = []
+    for csv_file in csv_files:
+        if not os.path.isfile(csv_file):
+            print(f"❌ Error: File '{csv_file}' not found.")
+            continue
+        df = pd.read_csv(csv_file).fillna("")
+        all_rows.append(df)
+    if not all_rows:
+        print("❌ No valid CSV files provided.")
         return
+    df = pd.concat(all_rows, ignore_index=True)
 
     if not os.path.exists(LOGO_FILENAME):
         raise FileNotFoundError(f"❌ Logo file '{LOGO_FILENAME}' is required but not found.")
 
-    df = pd.read_csv(csv_file).fillna("")
     if "Account Name" in df.columns:
         df.sort_values("Account Name", inplace=True)
     elif "First Name" in df.columns:
@@ -100,7 +108,7 @@ def generate_envelopes(csv_file):
 # ----- ENTRY POINT -----
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python generate_envelopes.py <members.csv>")
+        print("Usage: python generate_envelopes.py <members1.csv> [members2.csv ...]")
     else:
-        generate_envelopes(sys.argv[1])
+        generate_envelopes(sys.argv[1:])
 

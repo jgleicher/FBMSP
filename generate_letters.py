@@ -5,7 +5,6 @@ from datetime import datetime
 from docx import Document
 from PyPDF2 import PdfMerger
 import subprocess
-import concurrent.futures
 
 # === CONFIGURATION ===
 TEMPLATE_FILE = "New Member Letter Template.docx"  # should be in current directory
@@ -123,11 +122,10 @@ def main(csv_files, template_file=TEMPLATE_FILE):
                 all_rows.append(row)
 
     generated_pdfs = []
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(process_letter, row, today_str, template_file) for row in all_rows]
-        for future in concurrent.futures.as_completed(futures):
-            pdf_path = future.result()
-            generated_pdfs.append(pdf_path)
+
+    for row in all_rows:
+        pdf_path = process_letter(row, today_str, template_file)
+        generated_pdfs.append(pdf_path)
 
     # Combine PDFs
     if generated_pdfs:
@@ -161,6 +159,7 @@ if __name__ == "__main__":
         print("Usage: python generate_letters.py file1.csv [file2.csv ...] [TEMPLATE_FILE]")
         sys.exit(1)
     args = sys.argv[1:]
+    
     if len(args) > 1 and args[-1].lower().endswith('.docx') and os.path.isfile(args[-1]):
         template_file = args[-1]
         csv_files = args[:-1]
@@ -168,3 +167,13 @@ if __name__ == "__main__":
         template_file = TEMPLATE_FILE
         csv_files = args
     main(csv_files, template_file)
+    if "--no-thread" in args:
+        use_threading = False
+        args.remove("--no-thread")
+    if len(args) > 1 and args[-1].lower().endswith('.docx') and os.path.isfile(args[-1]):
+        template_file = args[-1]
+        csv_files = args[:-1]
+    else:
+        template_file = TEMPLATE_FILE
+        csv_files = args
+    main(csv_files, template_file, use_threading=use_threading)
